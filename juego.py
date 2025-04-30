@@ -1,9 +1,10 @@
 import sys
 from collections import deque
+from typing import Optional, Dict, List
 
 sys.setrecursionlimit
 
-def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, int]) -> list[str] | None:
+def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, int]) -> Optional[List[str]]:
     bloqueada = [False] * (n + 2)
     for r in robots:
         if 1 <= r <= n:
