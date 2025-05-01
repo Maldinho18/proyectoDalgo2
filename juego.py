@@ -2,54 +2,56 @@ import sys
 from collections import deque
 from typing import Optional, Dict, List, Tuple
 
-sys.setrecursionlimit
-
-def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, int]) -> Optional[List[str]]:
+def resolver_caso(n: int, energia: int, robots: list[int], poderes: Dict[int, int]) -> Optional[List[str]]:
     bloqueada = [False] * (n + 2)
     for r in robots:
         if 1 <= r <= n:
             bloqueada[r] = True
-    salto = poderes
     
     padre = list(range(n + 2))
     
-    def encontrar(x) -> int:
+    def encontrar(x: int) -> int:
         while padre[x] != x:
             padre[x] = padre[padre[x]]
             x = padre[x]
         return x
-    def union(a, b) -> None:
-        padre[encontrar(a)] = encontrar(b)
+    
+    def union(a: int, b: int) -> None:
+        pa, pb = encontrar(a), encontrar(b)
+        if pa != pb:
+            padre[pa] = pb
     for i in range(1, n + 1):
         if bloqueada[i]:
             union(i, i + 1)
-    max_energy = [-1] * (n + 1)
-    parent: Dict[Tuple[int, int], Tuple[Optional[int], Optional[int], Optional[str]]] = {}
-    
-    dq = deque([(0, energia)])
-    max_energy[0] = energia
-    parent[(0, energia)] = (None, None, None)
+    start = (0, energia)
+    dq = deque([start])
+    visited = set([start])
+    parent_state: Dict[Tuple[int, int], Tuple[int, int, str]] = {}
     
     while dq:
         pos, e = dq.popleft()
-        for mov, etiqueta in [(pos+1, 'C+'), (pos-1, 'C-')]:
-            if 0 <= mov <= n and not bloqueada[mov] and max_energy[mov] < e:
-                max_energy[mov] = e
-                parent[(mov, e)] = (pos, e, etiqueta)
-                union(mov, mov + 1)
-                if mov == n:
-                    return reconstruir(n, e, parent)
-                dq.append((mov, e))
-        k = salto.get(pos)
-        if k:
-            for mov, etiqueta in [(pos + k, 'S+'), (pos - k, 'S-')]:
-                if 0 <= mov <= n and not bloqueada[mov] and max_energy[mov] < e:
-                    max_energy[mov] = e
-                    parent[(mov, e)] = (pos, e, etiqueta)
-                    union(mov, mov + 1)
+        for mov, tag in ((pos + 1, 'C+'), (pos - 1, 'C-')):
+            if 1 <= mov <= n and not bloqueada[mov]:
+                nxt = (mov,e)
+                if nxt not in visited:
+                    visited.add(nxt)
+                    parent_state[nxt] = (pos, e, tag)
+                    dq.append(nxt)
                     if mov == n:
-                        return reconstruir(n, e, parent)
-                    dq.append((mov, e))
+                        return reconstruir(n, e, parent_state)
+                    dq.append(nxt)
+        if pos in poderes:
+            k = poderes[pos]
+            for mov, tag in ((pos + k, 'S+'), (pos - k, 'S-')):
+                if 1 <= mov <= n and not bloqueada[mov]:
+                    nxt = (mov,e)
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        parent_state[nxt] = (pos, e, tag)
+                        dq.append(nxt)
+                        if mov == n:
+                            return reconstruir(n, e, parent_state)
+                        dq.append(nxt)
         low, high = max(1, pos - e), min(n, pos + e)
         j = encontrar(low)
         while j <= high:
@@ -61,54 +63,51 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
             ne = e - dist
             if ne < 0:
                 break
-            etiqueta = f"T{j - pos}"
-            if max_energy[j] < ne:
-                max_energy[j] = ne
-                parent[(j, ne)] = (pos, e, etiqueta)
-                union(j, j + 1)
+            nxt = (j, ne)
+            if nxt not in visited:
+                visited.add(nxt)
+                parent_state[nxt] = (pos, e, f"T{j - pos}")
                 if j == n:
-                    return reconstruir(n, ne, parent)
-                dq.append((j, ne))
-            else:
-                union(j, j + 1)
-            j = encontrar(j + 1)
+                    return reconstruir(n, ne, parent_state)
+                dq.append(nxt)
+            union(j, j + 1)
+            j = encontrar(j)
     return None
 
-def reconstruir(destino: int, energia_final:int, padre: Dict[Tuple[int, int], Tuple[Optional[int], Optional[int], Optional[str]]]) -> list[str]:
-    acciones = []
+def reconstruir(destino: int, energia_final:int, padre: Dict[Tuple[int, int], Tuple[int, int, str]]) -> list[str]:
+    acciones: List[str] = []
     nodo = (destino, energia_final)
-    while True:
-        prev = padre[nodo]
-        if prev[0] is None:
-            break
-        acciones.append(prev[2])
-        nodo = (prev[0], prev[1])
+    while nodo in padre:
+        ppos, pe, tag = padre[nodo]
+        acciones.append(tag)
+        nodo = (ppos, pe)
     acciones.reverse()
     return acciones
 
 def main() -> None:
-    t_line = sys.stdin.readline()
-    while t_line.strip() == "":
-        t_line = sys.stdin.readline()
-    t = int(t_line)
+    data = sys.stdin.read().strip().splitlines()
+    idx = 0
+    while idx < len(data) and data[idx].strip() == "":
+        idx += 1
+    t = int(data[idx].strip()); idx += 1
     for _ in range(t):
-        line = sys.stdin.readline()
-        while line.strip() == "":
-            line = sys.stdin.readline()
-        n, energia = map(int, line.strip().split())
-        line = sys.stdin.readline()
-        while line.strip() == "":
-            line = sys.stdin.readline()
-        robots = list(map(int, line.strip().split())) if line.strip() else []
-        line = sys.stdin.readline()
-        while line.strip() == "":
-            line = sys.stdin.readline()
-        token_line = list(map(int, line.strip().split())) if line.strip() else []
+        while data[idx].strip() == "":
+            idx += 1
+        n, energia = map(int, data[idx].split()); idx += 1
+        while data[idx].strip() == "":
+            idx += 1
+        robots = list(map(int, data[idx].split())) if data[idx].strip() else []
+        idx += 1
+        while data[idx].strip() == "":
+            idx += 1
+        token_line = list(map(int, data[idx].split())) if data[idx].strip() else []
+        idx += 1
         poderes = {(token_line[i]): (token_line[i + 1]) for i in range(0, len(token_line), 2)}
         resultado = resolver_caso(n, energia, robots, poderes)
         if resultado is None:
             print("No hay solución")
         else:
             print(len(resultado), *resultado)
+            
 if __name__ == "__main__":
     main()
