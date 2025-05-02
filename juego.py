@@ -22,12 +22,12 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
             nuevo = pos + d
             if 0 <= nuevo <= n and nuevo not in robots and not visitado[nuevo][en]:
                 visitado[nuevo][en] = True
-                padre[nuevo, en] = (pos, en)
+                padre[(nuevo, en)] = (pos, en)
                 accion[nuevo, en] = etiqueta
                 cola.append((nuevo, en))
         if pos in poderes:
             salto = poderes[pos]
-            for d, etiqueta in [(salto, "S+"), (-salto, "S-")]:
+            for d, etiqueta in [(-salto, "S-"), (salto, "S+")]:
                 nuevo = pos + d
                 if 0 <= nuevo <= n and nuevo not in robots and not visitado[nuevo][en]:
                     visitado[nuevo][en] = True
@@ -50,7 +50,7 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
             if not visitado[destino][en - costo]:
                 visitado[destino][en - costo] = True
                 padre[destino, en - costo] = (pos, en)
-                accion[destino, en - costo] = f"T{costo}"
+                accion[destino, en - costo] = f"T-{costo}"
                 cola.append((destino, en - costo))
     estado_final = None
     for e in range(101):
@@ -65,7 +65,7 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
         camino.append(accion[actual])
         actual = padre[actual]
     camino.reverse()
-    return f"{len(camino)} {" ".join(camino)}"
+    return f"{len(camino)} {' '.join(camino)}"
 
 def main()->None:
     data = sys.stdin.read().strip().splitlines()
