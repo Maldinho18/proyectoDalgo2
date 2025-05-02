@@ -11,7 +11,7 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
     cola = deque()
     cola.append((0, energia))
     visitado[0][energia] = True
-    padre[0, energia] = None
+    padre[(0, energia)] = None
     
     while cola:
         pos, en = cola.popleft()
@@ -23,7 +23,7 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
             if 0 <= nuevo <= n and nuevo not in robots and not visitado[nuevo][en]:
                 visitado[nuevo][en] = True
                 padre[(nuevo, en)] = (pos, en)
-                accion[nuevo, en] = etiqueta
+                accion[(nuevo, en)] = etiqueta
                 cola.append((nuevo, en))
         if pos in poderes:
             salto = poderes[pos]
@@ -40,8 +40,8 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
                 break
             if not visitado[destino][en - costo]:
                 visitado[destino][en - costo] = True
-                padre[destino, en - costo] = (pos, en)
-                accion[destino, en - costo] = f"T{costo}"
+                padre[(destino, en - costo)] = (pos, en)
+                accion[(destino, en - costo)] = f"T{costo}"
                 cola.append((destino, en - costo))
         for destino in sorted((p for p in plataformas_seguras if p < pos), reverse=True):
             costo = pos - destino
@@ -49,8 +49,8 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
                 break
             if not visitado[destino][en - costo]:
                 visitado[destino][en - costo] = True
-                padre[destino, en - costo] = (pos, en)
-                accion[destino, en - costo] = f"T-{costo}"
+                padre[(destino, en - costo)] = (pos, en)
+                accion[(destino, en - costo)] = f"T-{costo}"
                 cola.append((destino, en - costo))
     estado_final = None
     for e in range(101):
