@@ -25,15 +25,17 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
                 padre[(nuevo, en)] = (pos, en)
                 accion[(nuevo, en)] = etiqueta
                 cola.append((nuevo, en))
+                
         if pos in poderes:
             salto = poderes[pos]
             for d, etiqueta in [(-salto, "S-"), (salto, "S+")]:
                 nuevo = pos + d
                 if 0 <= nuevo <= n and nuevo not in robots and not visitado[nuevo][en]:
                     visitado[nuevo][en] = True
-                    padre[nuevo][en] = (pos, en)
-                    accion[nuevo][en] = etiqueta
+                    padre[(nuevo, en)] = (pos, en)
+                    accion[(nuevo, en)] = etiqueta
                     cola.append((nuevo, en))
+                    
         for destino in sorted(p for p in plataformas_seguras if p > pos):
             costo = destino - pos
             if en - costo < 0:
@@ -43,6 +45,7 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
                 padre[(destino, en - costo)] = (pos, en)
                 accion[(destino, en - costo)] = f"T{costo}"
                 cola.append((destino, en - costo))
+                
         for destino in sorted((p for p in plataformas_seguras if p < pos), reverse=True):
             costo = pos - destino
             if en - costo < 0:
@@ -52,19 +55,22 @@ def resolver_caso(n: int, energia: int, robots: list[int], poderes: dict[int, in
                 padre[(destino, en - costo)] = (pos, en)
                 accion[(destino, en - costo)] = f"T-{costo}"
                 cola.append((destino, en - costo))
+                
     estado_final = None
     for e in range(101):
         if visitado[n][e]:
             estado_final = (n, e)
             break
     if estado_final is None:
-        return "No hay solución"
+        return "NO SE PUEDE"
+    
     camino = []
     actual = estado_final
     while padre[actual] is not None:
         camino.append(accion[actual])
         actual = padre[actual]
     camino.reverse()
+    
     return f"{len(camino)} {' '.join(camino)}"
 
 def main()->None:
@@ -88,6 +94,6 @@ def main()->None:
         poderes = {(token_line[i]): (token_line[i + 1]) for i in range(0, len(token_line), 2)}
         resultado = resolver_caso(n, energia, robots, poderes)
         print(resultado)
+        
 if __name__ == "__main__":
     main()
-                
